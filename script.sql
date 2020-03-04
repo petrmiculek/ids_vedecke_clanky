@@ -113,14 +113,14 @@ CREATE TABLE MagazineIssue(
 
 CREATE TABLE Contribution(
     id INT NOT NULL PRIMARY KEY,
-    magazine_issue_id INT NOT NULL,
+    magazine_issue_year INT NOT NULL,
+    magazine_issue_number INT NOT NULL,
 
     CONSTRAINT Contribution_Article_fk -- generalization relationship
         FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Contribution_MagazineIssue_fk
-        FOREIGN KEY (magazine_issue_id) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
-
+        FOREIGN KEY (magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
 );
 
 CREATE TABLE Citation(
@@ -132,7 +132,7 @@ CREATE TABLE Citation(
         FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Citation_Article_cited_fk
-        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE
+        FOREIGN KEY (id_cited) REFERENCES Article (id) ON DELETE CASCADE
 );
 
 ----------------------------------------------------------------------------------------------
@@ -141,6 +141,10 @@ INSERT INTO Institution
 
 INSERT INTO Person
     VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 105);
+
+-- invalid insert - institution does not exist
+--INSERT INTO Person
+--    VALUES(DEFAULT, 'AAA', 'BBB', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
 
 SELECT *
 FROM Person;
@@ -153,3 +157,4 @@ FROM Institution;
 -- SEQUENCE for primary keys generation
 -- ON DELETE .___. - check existing, discuss
 -- zjistit, co dělá CASCADE CONSTRAINTS u DROPů
+-- composite foreign key
