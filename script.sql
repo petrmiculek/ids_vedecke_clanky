@@ -1,21 +1,27 @@
-DROP TABLE Person CASCADE CONSTRAINTS; -- osoba
-DROP TABLE Institution CASCADE CONSTRAINTS; -- instituce
-DROP TABLE Publisher; -- vydavatel
-DROP TABLE Article; -- clanek
-DROP TABLE Contribution; -- prispevek
-DROP TABLE TechnicalReport; -- technicka zprava
-DROP TABLE Magazine; -- casopis
-DROP TABLE MagazineIssue; -- vydani casopisu
-DROP TABLE ArticleShare; -- podil na clanku
-DROP TABLE ImpactFactorHistory; -- historie impakt faktoru (casopisu)
-DROP TABLE Citation; -- citace (clanku)
-
 DROP SEQUENCE Person_seq;
+
+DROP TABLE Institution CASCADE CONSTRAINTS;                         -- instituce
+DROP TABLE Person CASCADE CONSTRAINTS;                              -- osoba
+DROP TABLE Article CASCADE CONSTRAINTS;                             -- clanek
+DROP TABLE ArticleShare CASCADE CONSTRAINTS;                        -- podil na clanku
+DROP TABLE Publisher CASCADE CONSTRAINTS;                           -- vydavatel
+DROP TABLE Magazine CASCADE CONSTRAINTS;                            -- casopis
+DROP TABLE ImpactFactorHistory CASCADE CONSTRAINTS;                 -- historie impakt faktoru (casopisu)
+DROP TABLE TechnicalReport CASCADE CONSTRAINTS;                     -- technicka zprava
+DROP TABLE MagazineIssue CASCADE CONSTRAINTS;                       -- vydani casopisu
+DROP TABLE Contribution CASCADE CONSTRAINTS;                        -- prispevek
+DROP TABLE Citation CASCADE CONSTRAINTS;                            -- citace (clanku)
+
 
 CREATE SEQUENCE Person_seq
     START WITH 100000
     INCREMENT BY 1;
 
+
+CREATE TABLE Institution (
+    code INT NOT NULL PRIMARY KEY
+
+);
 
 CREATE TABLE Person(
     id INT DEFAULT Person_seq.NEXTVAL NOT NULL PRIMARY KEY,
@@ -27,18 +33,15 @@ CREATE TABLE Person(
 
     institution_id INT NOT NULL,
 
-    CONSTRAINT institution_person_fk
-        FOREIGN KEY (institution_id) REFERENCES Person (id) ON DELETE CASCADE
+    CONSTRAINT Institution_Person_fk
+        FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
-CREATE TABLE Institution (
-    code INT NOT NULL PRIMARY KEY
 
-);
 
 CREATE TABLE Article(
     id INT NOT NULL PRIMARY KEY, -- document object identifier
-    name VARCHAR(63)
+    article_name VARCHAR(63)
 );
 
 CREATE TABLE ArticleShare(
@@ -54,6 +57,24 @@ CREATE TABLE ArticleShare(
 
     CONSTRAINT ArticleShare_Article_fk
         FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Publisher(
+    id INT NOT NULL PRIMARY KEY,
+    name_company VARCHAR(31) UNIQUE NOT NULL, -- vydavatel je identifikovan jmenem
+    name_owner VARCHAR(63)
+
+);
+
+CREATE TABLE Magazine(
+    id INT NOT NULL PRIMARY KEY,
+    name VARCHAR(63), -- not unique on purpose
+    publisher_id INT NOT NULL UNIQUE,
+    CONSTRAINT Magazine_Publisher_fk
+        FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE
+
+    -- (Magazine is referenced by impact factor history)
 );
 
 CREATE TABLE ImpactFactorHistory(
@@ -77,6 +98,18 @@ CREATE TABLE TechnicalReport(
         FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
+CREATE TABLE MagazineIssue(
+    id INT NOT NULL ,
+    date_published DATE,
+
+    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
+    issue_number INT CHECK (issue_number > 0), -- within a year
+
+    impact_factor_value NUMBER, -- decimal value?
+    -- also, does the attribute make sense together with table ImpactFactorHistory?
+
+    PRIMARY KEY (year, issue_number)
+);
 
 CREATE TABLE Contribution(
     id INT NOT NULL PRIMARY KEY,
@@ -102,43 +135,12 @@ CREATE TABLE Citation(
         FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE
 );
 
-CREATE TABLE MagazineIssue(
-    id INT NOT NULL ,
-    date_published DATE,
-
-    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
-    issue_number INT CHECK (issue_number > 0), -- within a year
-
-    impact_factor_value NUMBER, -- decimal value?
-    -- also, does the attribute make sense together with table ImpactFactorHistory?
-
-    PRIMARY KEY (year, issue_number)
-);
-
-CREATE TABLE Magazine(
-    id INT NOT NULL PRIMARY KEY,
-    name VARCHAR(63), -- not unique on purpose
-    publisher_id INT NOT NULL UNIQUE,
-    CONSTRAINT ImpactFactorHistory_Magazine_fk
-        FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE
-
-    -- (Magazine is referenced by impact factor history)
-);
-
-CREATE TABLE Publisher(
-    id INT NOT NULL PRIMARY KEY,
-    name_company VARCHAR(31) UNIQUE NOT NULL, -- vydavatel je identifikovan jmenem
-    name_owner VARCHAR(63)
-
-);
-
-
 ----------------------------------------------------------------------------------------------
+INSERT INTO Institution
+    VALUES (105);
 
 INSERT INTO Person
-    VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning');
-INSERT INTO Institution
-    VALUES (432, 105);
+    VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 105);
 
 SELECT *
 FROM Person;
@@ -150,3 +152,4 @@ FROM Institution;
 -- NOT NULL constraints - check existing, add further?
 -- SEQUENCE for primary keys generation
 -- ON DELETE .___. - check existing, discuss
+-- zjistit, co dělá CASCADE CONSTRAINTS u DROPů
