@@ -20,8 +20,12 @@ CREATE TABLE Person(
 
 CREATE TABLE ImpactFactorHistory(
     value NUMBER,
-    year INT CHECK(year >= 1900)
+    year INT CHECK(year >= 1900),
+    magazine_id NUMBER NOT NULL,
     -- foreign key -> magazine
+    CONSTRAINT ImpactFactorHistory_Magazine_fk
+        FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
+
 );
 
 CREATE TABLE Contribution(
@@ -34,13 +38,15 @@ CREATE TABLE TechnicalReport(
 
 
 CREATE TABLE ArticleShare(
-    percentage NUMBER CHECK(percentage > 0 and percentage <= 100)
+    percentage NUMBER CHECK(percentage > 0 and percentage <= 100) -- non-zero
     -- poradi autoru?
 );
 
 
 CREATE TABLE Magazine(
-
+    id INT NOT NULL PRIMARY KEY,
+    name VARCHAR(63)
+    -- impact factor history (separate table)
 );
 
 
@@ -50,10 +56,15 @@ CREATE TABLE MagazineIssue(
 
 
 CREATE TABLE Article(
+    id INT NOT NULL PRIMARY KEY, -- document object identifier
+    name VARCHAR(63)
+
 
 );
 
 CREATE TABLE Publisher(
+    name_company VARCHAR(31) NOT NULL PRIMARY KEY,
+    name_owner VARCHAR(63)
 
 );
 
