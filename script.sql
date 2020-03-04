@@ -26,45 +26,17 @@ CREATE TABLE Person(
     research_keywords VARCHAR(255)
 );
 
-
-CREATE TABLE ImpactFactorHistory(
-    value NUMBER,
-    year INT CHECK(year >= 1900),
-    magazine_id NUMBER NOT NULL,
-    -- foreign key -> magazine
-    CONSTRAINT ImpactFactorHistory_Magazine_fk
-        FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
-
+CREATE TABLE Institution (
+  code INT NOT NULL PRIMARY KEY,
+  person_id INT NOT NULL,
+  CONSTRAINT institution_person_fk
+    FOREIGN KEY (person_id) REFERENCES Person (id) ON DELETE CASCADE
 );
 
-CREATE TABLE Contribution(
-
+CREATE TABLE Article(
+    id INT NOT NULL PRIMARY KEY, -- document object identifier
+    name VARCHAR(63)
 );
-
-CREATE TABLE Citation(
-    id INT NOT NULL PRIMARY KEY,
-    id_citing INT NOT NULL,
-    id_cited INT NOT NULL,
-
-    CONSTRAINT Citation_Article_citing_fk
-        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE,
-
-    CONSTRAINT Citation_Article_cited_fk
-        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE
-
-);
-
-CREATE TABLE TechnicalReport(
-    id INT NOT NULL PRIMARY KEY,
-    institution_id INT NOT NULL,
-
-    CONSTRAINT techRep_id_fk
-        FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
-
-    CONSTRAINT techRep_institution_fk
-        FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
-);
-
 
 CREATE TABLE ArticleShare(
     author_id INT NOT NULL,
@@ -81,6 +53,50 @@ CREATE TABLE ArticleShare(
         FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE
 );
 
+CREATE TABLE ImpactFactorHistory(
+    value NUMBER,
+    year INT CHECK(year >= 1900),
+    magazine_id NUMBER NOT NULL,
+    -- foreign key -> magazine
+    CONSTRAINT ImpactFactorHistory_Magazine_fk
+        FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
+
+);
+
+CREATE TABLE TechnicalReport(
+    id INT NOT NULL PRIMARY KEY,
+    institution_id INT NOT NULL,
+
+    CONSTRAINT techRep_id_fk
+        FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
+
+    CONSTRAINT techRep_institution_fk
+        FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Contribution(
+
+);
+
+CREATE TABLE Citation(
+    id INT NOT NULL PRIMARY KEY,
+    id_citing INT NOT NULL,
+    id_cited INT NOT NULL,
+
+    CONSTRAINT Citation_Article_citing_fk
+        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE,
+
+    CONSTRAINT Citation_Article_cited_fk
+        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE
+);
+
+CREATE TABLE MagazineIssue(
+    id INT NOT NULL PRIMARY KEY,
+    date_published DATE,
+    impact_factor_value NUMBER -- decimal value?
+    -- also, does the attribute make sense together with table ImpactFactorHistory?
+);
 
 CREATE TABLE Magazine(
     id INT NOT NULL PRIMARY KEY,
@@ -92,22 +108,6 @@ CREATE TABLE Magazine(
     -- (Magazine is referenced by impact factor history)
 );
 
-
-CREATE TABLE MagazineIssue(
-    id INT NOT NULL PRIMARY KEY,
-    date_published DATE,
-    impact_factor_value NUMBER -- decimal value?
-    -- also, does the attribute make sense together with table ImpactFactorHistory?
-);
-
-
-CREATE TABLE Article(
-    id INT NOT NULL PRIMARY KEY, -- document object identifier
-    name VARCHAR(63)
-
-
-);
-
 CREATE TABLE Publisher(
     id INT NOT NULL PRIMARY KEY,
     name_company VARCHAR(31) NOT NULL,
@@ -116,13 +116,7 @@ CREATE TABLE Publisher(
 );
 
 
-
-CREATE TABLE Institution (
-  code INT NOT NULL PRIMARY KEY,
-  person_id INT NOT NULL,
-  CONSTRAINT institution_person_fk
-    FOREIGN KEY (person_id) REFERENCES Person (id) ON DELETE CASCADE
-);
+----------------------------------------------------------------------------------------------
 
 INSERT INTO Person
     VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning');
