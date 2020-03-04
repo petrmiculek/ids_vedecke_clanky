@@ -153,8 +153,15 @@ SELECT *
 FROM Institution;
 
 -- TODO
--- NOT NULL constraints - check existing, add further?
 -- SEQUENCE for primary keys generation
+
+-- NOT NULL constraints - check existing, add further?
 -- ON DELETE .___. - check existing, discuss
+
 -- zjistit, co dělá CASCADE CONSTRAINTS u DROPů
+
 -- composite foreign key
+
+-- otestovat vkládání příspěvku, technické zprávy a samotného článku (bez specializace)
+
+-- year + number je primary key, ale year by se dal vytáhnout z atributu 'date'
