@@ -23,14 +23,17 @@ CREATE TABLE Person(
     name_last VARCHAR(31),
     email VARCHAR(63),
     research_topic VARCHAR(1023),
-    research_keywords VARCHAR(255)
+    research_keywords VARCHAR(255),
+
+    institution_id INT NOT NULL,
+
+    CONSTRAINT institution_person_fk
+        FOREIGN KEY (institution_id) REFERENCES Person (id) ON DELETE CASCADE
 );
 
 CREATE TABLE Institution (
-  code INT NOT NULL PRIMARY KEY,
-  person_id INT NOT NULL,
-  CONSTRAINT institution_person_fk
-    FOREIGN KEY (person_id) REFERENCES Person (id) ON DELETE CASCADE
+    code INT NOT NULL PRIMARY KEY
+
 );
 
 CREATE TABLE Article(
@@ -41,7 +44,7 @@ CREATE TABLE Article(
 CREATE TABLE ArticleShare(
     author_id INT NOT NULL,
     article_id INT NOT NULL,
-    author_order INT NOT NULL, -- poradi autora, najit vhodnejsi oznaceni
+    author_order INT NOT NULL UNIQUE CHECK (author_order > 0), -- poradi autora, najit vhodnejsi oznaceni
     percentage NUMBER CHECK(percentage > 0 and percentage <= 100), -- non-zero
     -- ma smysl na urovni SQL hlidat Suma(percentage) == 100?
 
@@ -67,20 +70,28 @@ CREATE TABLE TechnicalReport(
     id INT NOT NULL PRIMARY KEY,
     institution_id INT NOT NULL,
 
-    CONSTRAINT techRep_id_fk
+    CONSTRAINT TechRep_Article_fk -- generalization relationship
         FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
 
-    CONSTRAINT techRep_institution_fk
+    CONSTRAINT TechRep_Institution_fk
         FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
 
 CREATE TABLE Contribution(
+    id INT NOT NULL PRIMARY KEY,
+    magazine_issue_id INT NOT NULL,
+
+    CONSTRAINT Contribution_Article_fk -- generalization relationship
+        FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
+
+    CONSTRAINT Contribution_MagazineIssue_fk
+        FOREIGN KEY (magazine_issue_id) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
 
 );
 
 CREATE TABLE Citation(
-    id INT NOT NULL PRIMARY KEY,
+    id INT NOT NULL PRIMARY KEY, -- musi mit tabulka primarni klic?
     id_citing INT NOT NULL,
     id_cited INT NOT NULL,
 
@@ -92,16 +103,22 @@ CREATE TABLE Citation(
 );
 
 CREATE TABLE MagazineIssue(
-    id INT NOT NULL PRIMARY KEY,
+    id INT NOT NULL ,
     date_published DATE,
-    impact_factor_value NUMBER -- decimal value?
+
+    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
+    issue_number INT CHECK (issue_number > 0), -- within a year
+
+    impact_factor_value NUMBER, -- decimal value?
     -- also, does the attribute make sense together with table ImpactFactorHistory?
+
+    PRIMARY KEY (year, issue_number)
 );
 
 CREATE TABLE Magazine(
     id INT NOT NULL PRIMARY KEY,
-    name VARCHAR(63),
-    publisher_id INT NOT NULL,
+    name VARCHAR(63), -- not unique on purpose
+    publisher_id INT NOT NULL UNIQUE,
     CONSTRAINT ImpactFactorHistory_Magazine_fk
         FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE
 
@@ -110,7 +127,7 @@ CREATE TABLE Magazine(
 
 CREATE TABLE Publisher(
     id INT NOT NULL PRIMARY KEY,
-    name_company VARCHAR(31) NOT NULL,
+    name_company VARCHAR(31) UNIQUE NOT NULL, -- vydavatel je identifikovan jmenem
     name_owner VARCHAR(63)
 
 );
