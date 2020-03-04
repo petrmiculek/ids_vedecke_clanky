@@ -1,5 +1,6 @@
 DROP TABLE Person CASCADE CONSTRAINTS; -- osoba
 DROP TABLE Institution CASCADE CONSTRAINTS; -- instituce
+DROP SEQUENCE Person_seq;
 DROP TABLE Publisher; -- vydavatel
 DROP TABLE Article; -- clanek
 DROP TABLE Contribution; -- prispevek
@@ -9,6 +10,12 @@ DROP TABLE MagazineIssue; -- vydani casopisu
 DROP TABLE ArticleShare; -- podil na clanku
 DROP TABLE ImpactFactorHistory; -- historie impakt faktoru (casopisu)
 
+
+CREATE SEQUENCE Person_seq
+    START WITH 100000
+    INCREMENT BY 1;
+
+
 CREATE TABLE Person(
     id INT DEFAULT Person_seq.NEXTVAL NOT NULL PRIMARY KEY,
     name_first VARCHAR(31),
@@ -16,7 +23,8 @@ CREATE TABLE Person(
     email VARCHAR(63),
     research_topic VARCHAR(1023),
     research_keywords VARCHAR(255)
-    );
+);
+
 
 CREATE TABLE ImpactFactorHistory(
     value NUMBER,
@@ -33,7 +41,14 @@ CREATE TABLE Contribution(
 );
 
 CREATE TABLE TechnicalReport(
+    id INT NOT NULL PRIMARY KEY,
+    institution_id INT NOT NULL,
 
+    CONSTRAINT techRep_id_fk
+        FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
+
+    CONSTRAINT techRep_institution_fk
+        FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
 
@@ -71,14 +86,19 @@ CREATE TABLE Publisher(
 
 
 CREATE TABLE Institution (
-  id INT NOT NULL PRIMARY KEY,
+  code INT NOT NULL PRIMARY KEY,
   person_id INT NOT NULL,
   CONSTRAINT institution_person_fk
     FOREIGN KEY (person_id) REFERENCES Person (id) ON DELETE CASCADE
 );
 
+INSERT INTO Person
+    VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning');
 INSERT INTO Institution
---VALUES(2300, 'Peter', 'mailik@a.com', 'vyskum o nicom', 'nicota, nic, hh');
+    VALUES (432, 105);
+
+SELECT *
+FROM Person;
 
 SELECT *
 FROM Institution;
