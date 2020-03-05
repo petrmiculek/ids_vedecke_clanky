@@ -1,4 +1,5 @@
 DROP SEQUENCE Person_seq;
+DROP SEQUENCE Author_order_seq;
 
 DROP TABLE Institution CASCADE CONSTRAINTS;                         -- instituce
 DROP TABLE Person CASCADE CONSTRAINTS;                              -- osoba
@@ -17,10 +18,13 @@ CREATE SEQUENCE Person_seq
     START WITH 100000
     INCREMENT BY 1;
 
+CREATE SEQUENCE Author_order_seq
+    START WITH 1
+    INCREMENT BY 1;
 
 CREATE TABLE Institution (
-    code INT NOT NULL PRIMARY KEY
-
+    code INT NOT NULL PRIMARY KEY,
+    name VARCHAR(63)
 );
 
 CREATE TABLE Person(
@@ -42,12 +46,14 @@ CREATE TABLE Person(
 CREATE TABLE Article(
     id INT NOT NULL PRIMARY KEY, -- document object identifier
     article_name VARCHAR(63)
+    --- missing author???
 );
 
 CREATE TABLE ArticleShare(
     author_id INT NOT NULL,
     article_id INT NOT NULL,
-    author_order INT NOT NULL UNIQUE CHECK (author_order > 0), -- poradi autora, najit vhodnejsi oznaceni
+    author_order INT DEFAULT Author_order_seq.NEXTVAL, -- poradi autora, najit vhodnejsi oznaceni
+                                                       -- treba domysliet, order treba byt vzdy od 1 pre kazdy clanok zvlast
     percentage NUMBER CHECK(percentage > 0 and percentage <= 100), -- non-zero
     -- ma smysl na urovni SQL hlidat Suma(percentage) == 100?
 
@@ -101,23 +107,28 @@ CREATE TABLE TechnicalReport(
 CREATE TABLE MagazineIssue(
     id INT NOT NULL ,
     date_published DATE,
-
+    magazine_id INT NOT NULL,
     year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
     issue_number INT CHECK (issue_number > 0), -- within a year
 
     impact_factor_value NUMBER, -- decimal value?
     -- also, does the attribute make sense together with table ImpactFactorHistory?
 
-    PRIMARY KEY (year, issue_number)
+    PRIMARY KEY (year, issue_number),
+
+    CONSTRAINT Issue_Magazine_fk
+        FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
 );
 
 CREATE TABLE Contribution(
     id INT NOT NULL PRIMARY KEY,
+    magazine_id INT NOT NULL,       -- added magazine id. When it was primary, it wasnt possible to
+                                    -- add more contributions referencing 1 magazine
     magazine_issue_year INT NOT NULL,
     magazine_issue_number INT NOT NULL,
 
     CONSTRAINT Contribution_Article_fk -- generalization relationship
-        FOREIGN KEY (id) REFERENCES Article (id) ON DELETE CASCADE,
+        FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Contribution_MagazineIssue_fk
         FOREIGN KEY (magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
@@ -125,32 +136,104 @@ CREATE TABLE Contribution(
 
 CREATE TABLE Citation(
     id INT NOT NULL PRIMARY KEY, -- musi mit tabulka primarni klic?
-    id_citing INT NOT NULL,
-    id_cited INT NOT NULL,
+    id_citing_contribution INT NOT NULL,
+    id_cited_article INT NOT NULL,
 
-    CONSTRAINT Citation_Article_citing_fk
-        FOREIGN KEY (id_citing) REFERENCES Article (id) ON DELETE CASCADE,
+    CONSTRAINT Citation_Contribution_citing_fk
+        FOREIGN KEY (id_citing_contribution) REFERENCES Contribution (id) ON DELETE CASCADE,
 
     CONSTRAINT Citation_Article_cited_fk
-        FOREIGN KEY (id_cited) REFERENCES Article (id) ON DELETE CASCADE
+        FOREIGN KEY (id_cited_article) REFERENCES Article (id) ON DELETE CASCADE
 );
 
 ----------------------------------------------------------------------------------------------
 INSERT INTO Institution
-    VALUES (105);
+    VALUES(105, 'Institution of Bioinformatics in Prague');
+INSERT INTO Institution
+    VALUES(106, 'European Institute of Absurd Articles');
 
 INSERT INTO Person
-    VALUES(DEFAULT, 'Tibor', 'Kubik', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 105);
+    VALUES(DEFAULT, 'Emma', 'Clarkson', 'emma@gclarkson.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 105);
+INSERT INTO Person
+    VALUES(DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com', 'Measurement of absurdity of European articles', 'EU, articles, absurd articles', 106);
 
+INSERT INTO Article
+    VALUES(567, 'Locus classification in chromosome');
+INSERT INTO Article
+    VALUES(672, 'Blah-blah article');
+
+INSERT INTO ArticleShare
+    VALUES(100000, 567, DEFAULT, 40);
+INSERT INTO ArticleShare
+    VALUES(100001, 567, DEFAULT, 60);
+INSERT INTO ArticleShare
+    VALUES(100001, 672, DEFAULT, 100);
+
+INSERT INTO TechnicalReport
+    VALUES(567, 105);
+
+INSERT INTO Publisher
+    VALUES(300, 'Best Publishers Ever (BPE)', 'Mark Fitch');
+INSERT INTO Publisher
+    VALUES(301, 'Independent European Publishers', 'Emily Aldrin');
+
+INSERT INTO Magazine
+    VALUES(555, 'First Magazine', 300);
+INSERT INTO Magazine
+    VALUES(556, 'Tech Mag', 301);
+
+INSERT INTO MagazineIssue
+    VALUES(1, '30-November-2019', 555, 2019, 1, 4.5);
+INSERT INTO MagazineIssue
+    VALUES(2, '11-December-2019', 555, 2019, 2, 1.3);
+
+-- INSERT ImpactFactorHistory
+
+
+INSERT INTO Contribution
+    VALUES(1, 567, 2019, 1);
+INSERT INTO Contribution
+    VALUES(2, 567, 2019, 1);
+
+INSERT INTO Citation
+    VALUES(1, 2, 567);
+INSERT INTO Citation
+    VALUES(2, 1, 672);
 -- invalid insert - institution does not exist
 --INSERT INTO Person
 --    VALUES(DEFAULT, 'AAA', 'BBB', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
+
+
+SELECT *
+FROM Institution;
 
 SELECT *
 FROM Person;
 
 SELECT *
-FROM Institution;
+FROM Article;
+
+SELECT *
+FROM ArticleShare;
+
+SELECT *
+FROM TechnicalReport;
+
+SELECT *
+FROM Publisher;
+
+SELECT *
+FROM Magazine;
+
+SELECT *
+FROM MagazineIssue;
+
+SELECT *
+FROM Contribution;
+
+SELECT *
+FROM Citation;
+
 
 -- TODO
 -- SEQUENCE for primary keys generation
