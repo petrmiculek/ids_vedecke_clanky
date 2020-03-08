@@ -88,8 +88,10 @@ CREATE TABLE Magazine(
     id INT DEFAULT Magazine_seq.NEXTVAL PRIMARY KEY,
     name VARCHAR(63),           -- name and publisher_id MUST BE UNIQUE together
     publisher_id INT NOT NULL,
+
     CONSTRAINT Magazine_Publisher_fk
-        FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE
+        FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE,
+    CONSTRAINT name_publisher_unique UNIQUE(publisher_id, name)
 );
 
 CREATE TABLE ImpactFactorHistory(
@@ -116,9 +118,6 @@ CREATE TABLE TechnicalReport(
 CREATE TABLE MagazineIssue(
     date_published DATE,
 
-    impact_factor_value NUMBER, -- decimal value?
-    -- also, does the attribute make sense together with table ImpactFactorHistory?
-
     magazine_id INT NOT NULL,
     year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
     issue_number INT CHECK (issue_number > 0), -- within a year
@@ -135,6 +134,9 @@ CREATE TABLE Contribution(
     magazine_id INT NOT NULL,
     magazine_issue_year INT NOT NULL,
     magazine_issue_number INT NOT NULL,
+
+    other_citations_count INT NOT NULL, -- how many times is this article cited by articles
+                                        -- which are not present in this database
 
     CONSTRAINT Contribution_Article_fk -- generalization relationship
         FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
