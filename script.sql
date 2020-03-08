@@ -73,6 +73,8 @@ CREATE TABLE ArticleShare
     author_order INT,
     percentage   NUMBER CHECK (percentage > 0 and percentage <= 100), -- non-zero
 
+    CONSTRAINT Author_Article_unique UNIQUE (author_id, article_id),
+
     CONSTRAINT ArticleShare_Person_fk
         FOREIGN KEY (author_id) REFERENCES Person (id) ON DELETE CASCADE,
 
@@ -139,7 +141,7 @@ CREATE TABLE MagazineIssue
 
 CREATE TABLE Contribution
 (
-    id                    INT PRIMARY KEY,
+    article_id            INT PRIMARY KEY,
 
     magazine_id           INT NOT NULL,
     magazine_issue_year   INT NOT NULL,
@@ -149,10 +151,10 @@ CREATE TABLE Contribution
     -- which are not present in this database
 
     CONSTRAINT Contribution_Article_fk  -- generalization relationship
-        FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
+        FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Contribution_MagazineIssue_fk
-        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
+        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (magazine_id, year, issue_number) ON DELETE CASCADE
 );
 
 
@@ -165,7 +167,7 @@ CREATE TABLE Citation
         FOREIGN KEY (id_cited_contribution) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Citation_Article_citing_fk
-        FOREIGN KEY (id_citing_article) REFERENCES Contribution (id) ON DELETE CASCADE,
+        FOREIGN KEY (id_citing_article) REFERENCES Contribution (article_id) ON DELETE CASCADE,
 
     PRIMARY KEY (id_cited_contribution, id_citing_article) -- ensures unique combination of (Cited, Citing)
 );
@@ -190,11 +192,11 @@ INSERT INTO Article
 VALUES (672, 'Blah-blah article');
 
 INSERT INTO ArticleShare
-VALUES (100000, 567, DEFAULT, 40);
+VALUES (100000, 567, 1, 40);
 INSERT INTO ArticleShare
-VALUES (100001, 567, DEFAULT, 60);
+VALUES (100001, 567, 2, 60);
 INSERT INTO ArticleShare
-VALUES (100001, 672, DEFAULT, 100);
+VALUES (100001, 672, 3, 100);
 
 INSERT INTO TechnicalReport
 VALUES (567, 105);
@@ -209,23 +211,28 @@ VALUES (555, 'First Magazine', 300);
 INSERT INTO Magazine
 VALUES (556, 'Tech Mag', 301);
 
+INSERT INTO Magazine
+VALUES (567, 'Tech Mag', 300);
+
 INSERT INTO MagazineIssue
 VALUES ('30-November-2019', 555, 2019, 1);
 INSERT INTO MagazineIssue
 VALUES ('11-December-2019', 555, 2019, 2);
+INSERT INTO MagazineIssue
+VALUES ('11-December-2019', 567, 2019, 1);
 
 -- INSERT ImpactFactorHistory
 
 
 INSERT INTO Contribution
-VALUES (1, 567, 2019, 1, 12);
+VALUES (672, 555, 2019, 1, 12);
 INSERT INTO Contribution
-VALUES (2, 567, 2019, 1, 47);
+VALUES (672, 555, 2019, 2, 47);
 
 INSERT INTO Citation
-VALUES (2, 567);
+VALUES (567, 2);
 INSERT INTO Citation
-VALUES (1, 672);
+VALUES (672, 1);
 
 -- invalid insert - non-unique Cited:Citing
 -- INSERT INTO Citation VALUES(1, 672);
