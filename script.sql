@@ -4,17 +4,17 @@ DROP SEQUENCE Magazine_seq;
 DROP SEQUENCE Person_seq;
 DROP SEQUENCE Publisher_seq;
 
-DROP TABLE Institution CASCADE CONSTRAINTS;                         -- instituce
-DROP TABLE Person CASCADE CONSTRAINTS;                              -- osoba
-DROP TABLE Article CASCADE CONSTRAINTS;                             -- clanek
-DROP TABLE ArticleShare CASCADE CONSTRAINTS;                        -- podil na clanku
-DROP TABLE Publisher CASCADE CONSTRAINTS;                           -- vydavatel
-DROP TABLE Magazine CASCADE CONSTRAINTS;                            -- casopis
-DROP TABLE ImpactFactorHistory CASCADE CONSTRAINTS;                 -- historie impakt faktoru (casopisu)
-DROP TABLE TechnicalReport CASCADE CONSTRAINTS;                     -- technicka zprava
-DROP TABLE MagazineIssue CASCADE CONSTRAINTS;                       -- vydani casopisu
-DROP TABLE Contribution CASCADE CONSTRAINTS;                        -- prispevek
-DROP TABLE Citation CASCADE CONSTRAINTS;                            -- citace (clanku)
+DROP TABLE Institution CASCADE CONSTRAINTS; -- instituce
+DROP TABLE Person CASCADE CONSTRAINTS; -- osoba
+DROP TABLE Article CASCADE CONSTRAINTS; -- clanek
+DROP TABLE ArticleShare CASCADE CONSTRAINTS; -- podil na clanku
+DROP TABLE Publisher CASCADE CONSTRAINTS; -- vydavatel
+DROP TABLE Magazine CASCADE CONSTRAINTS; -- casopis
+DROP TABLE ImpactFactorHistory CASCADE CONSTRAINTS; -- historie impakt faktoru (casopisu)
+DROP TABLE TechnicalReport CASCADE CONSTRAINTS; -- technicka zprava
+DROP TABLE MagazineIssue CASCADE CONSTRAINTS; -- vydani casopisu
+DROP TABLE Contribution CASCADE CONSTRAINTS; -- prispevek
+DROP TABLE Citation CASCADE CONSTRAINTS; -- citace (clanku)
 
 
 CREATE SEQUENCE Article_seq
@@ -91,6 +91,7 @@ CREATE TABLE Magazine(
 
     CONSTRAINT Magazine_Publisher_fk
         FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE,
+
     CONSTRAINT name_publisher_unique UNIQUE(publisher_id, name)
 );
 
@@ -115,61 +116,66 @@ CREATE TABLE TechnicalReport(
         FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
-CREATE TABLE MagazineIssue(
+CREATE TABLE MagazineIssue
+(
     date_published DATE,
 
-    magazine_id INT NOT NULL,
-    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
-    issue_number INT CHECK (issue_number > 0), -- within a year
+    magazine_id    INT NOT NULL,
+    year           INT CHECK (year >= 1900),       -- possible trigger, currently is a duplicate value
+    issue_number   INT CHECK (issue_number > 0),   -- within a year
 
-    PRIMARY KEY (magazine_id, year, issue_number),
+    PRIMARY KEY (magazine_id, year, issue_number), -- magazine_id ensures uniqueness of (Publisher, Magazine)
 
     CONSTRAINT Issue_Magazine_fk
         FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
 );
 
 CREATE TABLE Contribution(
-    id INT PRIMARY KEY,
+                             id                    INT PRIMARY KEY,
 
-    magazine_id INT NOT NULL,
-    magazine_issue_year INT NOT NULL,
-    magazine_issue_number INT NOT NULL,
+                             magazine_id           INT NOT NULL,
+                             magazine_issue_year   INT NOT NULL,
+                             magazine_issue_number INT NOT NULL,
 
-    other_citations_count INT NOT NULL, -- how many times is this article cited by articles
-                                        -- which are not present in this database
+                             other_citations_count INT NOT NULL, -- how many times is this article cited by articles
+    -- which are not present in this database
 
-    CONSTRAINT Contribution_Article_fk -- generalization relationship
-        FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
+                             CONSTRAINT Contribution_Article_fk  -- generalization relationship
+                                 FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
 
-    CONSTRAINT Contribution_MagazineIssue_fk
-        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
+                             CONSTRAINT Contribution_MagazineIssue_fk
+                                 FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
 );
 
-CREATE TABLE Citation(
-    id INT PRIMARY KEY, -- musi mit tabulka primarni klic?
-    id_citing_contribution INT NOT NULL,
-    id_cited_article INT NOT NULL,
-
-    CONSTRAINT Citation_Contribution_citing_fk
-        FOREIGN KEY (id_citing_contribution) REFERENCES Contribution (id) ON DELETE CASCADE,
-
-    CONSTRAINT Citation_Article_cited_fk
-        FOREIGN KEY (id_cited_article) REFERENCES Article (id) ON DELETE CASCADE
-);
+INSERT INTO Institution
+VALUES (105, 'Institution of Bioinformatics in Prague');
 
 ----------------------------------------------------------------------------------------------
+CREATE TABLE Citation
+(
+    id_cited_contribution INT NOT NULL,
+    id_citing_article     INT NOT NULL,
+
+    CONSTRAINT Citation_Contribution_cited_fk
+        FOREIGN KEY (id_cited_contribution) REFERENCES Article (id) ON DELETE CASCADE,
+
+    CONSTRAINT Citation_Article_citing_fk
+        FOREIGN KEY (id_citing_article) REFERENCES Contribution (id) ON DELETE CASCADE,
+
+    PRIMARY KEY (id_cited_contribution, id_citing_article) -- ensures unique combination of (Cited, Citing)
+);
 INSERT INTO Institution
-    VALUES(105, 'Institution of Bioinformatics in Prague');
-INSERT INTO Institution
-    VALUES(106, 'European Institute of Absurd Articles');
+VALUES (106, 'European Institute of Absurd Articles');
 
 INSERT INTO Person
-    VALUES(DEFAULT, 'Emma', 'Clarkson', 'emma@gclarkson.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 105);
+VALUES (DEFAULT, 'Emma', 'Clarkson', 'emma@gclarkson.com', 'Machine learning for computational haplotype analysis',
+        'AI, bioinformatics, genes, machine learning', 105);
 INSERT INTO Person
-    VALUES(DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com', 'Measurement of absurdity of European articles', 'EU, articles, absurd articles', 106);
+VALUES (DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com', 'Measurement of absurdity of European articles',
+        'EU, articles, absurd articles', 106);
 
 INSERT INTO Article
-    VALUES(567, 'Locus classification in chromosome');
+VALUES (567, 'Locus classification in chromosome');
 INSERT INTO Article
     VALUES(672, 'Blah-blah article');
 
@@ -184,32 +190,36 @@ INSERT INTO TechnicalReport
     VALUES(567, 105);
 
 INSERT INTO Publisher
-    VALUES(300, 'Best Publishers Ever (BPE)', 'Mark Fitch');
+VALUES (300, 'Best Publishers Ever (BPE)', 'Mark Fitch');
 INSERT INTO Publisher
-    VALUES(301, 'Independent European Publishers', 'Emily Aldrin');
+VALUES (301, 'Independent European Publishers', 'Emily Aldrin');
 
 INSERT INTO Magazine
-    VALUES(555, 'First Magazine', 300);
+VALUES (555, 'First Magazine', 300);
 INSERT INTO Magazine
-    VALUES(556, 'Tech Mag', 301);
+VALUES (556, 'Tech Mag', 301);
 
 INSERT INTO MagazineIssue
-    VALUES('30-November-2019', 555, 2019, 1, 4.5);
+VALUES ('30-November-2019', 555, 2019, 1);
 INSERT INTO MagazineIssue
-    VALUES('11-December-2019', 555, 2019, 2, 1.3);
+VALUES ('11-December-2019', 555, 2019, 2);
 
 -- INSERT ImpactFactorHistory
 
 
 INSERT INTO Contribution
-    VALUES(1, 567, 2019, 1);
+VALUES (1, 567, 2019, 1, 12);
 INSERT INTO Contribution
-    VALUES(2, 567, 2019, 1);
+VALUES (2, 567, 2019, 1, 47);
 
 INSERT INTO Citation
-    VALUES(1, 2, 567);
+VALUES (2, 567);
 INSERT INTO Citation
-    VALUES(2, 1, 672);
+VALUES (1, 672);
+
+-- invalid insert - non-unique Cited:Citing
+-- INSERT INTO Citation VALUES(1, 672);
+
 -- invalid insert - institution does not exist
 --INSERT INTO Person
 --    VALUES(DEFAULT, 'AAA', 'BBB', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
@@ -251,8 +261,6 @@ FROM Citation;
 
 -- NOT NULL constraints - check existing, add further?
 -- ON DELETE .___. - check existing, discuss
-
--- zjistit, co dělá CASCADE CONSTRAINTS u DROPů
 
 -- composite foreign key
 
