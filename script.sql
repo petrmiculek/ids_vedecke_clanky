@@ -47,8 +47,8 @@ CREATE TABLE Institution
 CREATE TABLE Person
 (
     id                INT DEFAULT Person_seq.NEXTVAL PRIMARY KEY,
-    name_first        VARCHAR(31),
-    name_last         VARCHAR(31),
+    name_first        VARCHAR(31) NOT NULL,
+    name_last         VARCHAR(31) NOT NULL,
     email             VARCHAR(63),
     research_topic    VARCHAR(1023),
     research_keywords VARCHAR(255),
@@ -62,7 +62,7 @@ CREATE TABLE Person
 CREATE TABLE Article
 (
     id           INT DEFAULT Article_seq.NEXTVAL PRIMARY KEY, -- document object identifier
-    article_name VARCHAR(63)
+    article_name VARCHAR(63) NOT NULL
     --- missing author???
 );
 
@@ -70,12 +70,11 @@ CREATE TABLE ArticleShare
 (
     author_id    INT NOT NULL,
     article_id   INT NOT NULL,
-    author_order INT NOT NULL,
+    author_order INT,
     percentage   NUMBER CHECK (percentage > 0 and percentage <= 100), -- non-zero
 
     CONSTRAINT ArticleShare_Person_fk
         FOREIGN KEY (author_id) REFERENCES Person (id) ON DELETE CASCADE,
-    -- on delete nemusi byt cascade?
 
     CONSTRAINT ArticleShare_Article_fk
         FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE
@@ -84,7 +83,7 @@ CREATE TABLE ArticleShare
 CREATE TABLE Publisher
 (
     id           INT DEFAULT Publisher_seq.NEXTVAL PRIMARY KEY,
-    name_company VARCHAR(31) UNIQUE NOT NULL, -- vydavatel je identifikovan jmenem
+    name_company VARCHAR(31) UNIQUE NOT NULL, -- Publisher is identified by a unique name
     name_owner   VARCHAR(63)
 
 );
@@ -92,7 +91,7 @@ CREATE TABLE Publisher
 CREATE TABLE Magazine
 (
     id           INT DEFAULT Magazine_seq.NEXTVAL PRIMARY KEY,
-    name         VARCHAR(63), -- name and publisher_id MUST BE UNIQUE together
+    name         VARCHAR(63) NOT NULL, -- name and publisher_id MUST BE UNIQUE together
     publisher_id INT NOT NULL,
 
     CONSTRAINT Magazine_Publisher_fk
@@ -104,8 +103,8 @@ CREATE TABLE Magazine
 CREATE TABLE ImpactFactorHistory
 (
     magazine_id INT NOT NULL,
-    value       NUMBER,
-    year        INT CHECK (year >= 1900),
+    value       NUMBER NOT NULL,
+    year        INT NOT NULL CHECK (year >= 1900),
     -- foreign key -> magazine
     CONSTRAINT ImpactFactorHistory_Magazine_fk
         FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
@@ -128,7 +127,7 @@ CREATE TABLE MagazineIssue
 (
     date_published DATE,
 
-    magazine_id    INT NOT NULL,
+    magazine_id    INT,
     year           INT CHECK (year >= 1900),       -- possible trigger, currently is a duplicate value
     issue_number   INT CHECK (issue_number > 0),   -- within a year
 
@@ -146,7 +145,7 @@ CREATE TABLE Contribution
     magazine_issue_year   INT NOT NULL,
     magazine_issue_number INT NOT NULL,
 
-    other_citations_count INT NOT NULL, -- how many times is this article cited by articles
+    other_citations_count INT, -- how many times is this article cited by articles
     -- which are not present in this database
 
     CONSTRAINT Contribution_Article_fk  -- generalization relationship
@@ -159,8 +158,8 @@ CREATE TABLE Contribution
 
 CREATE TABLE Citation
 (
-    id_cited_contribution INT NOT NULL,
-    id_citing_article     INT NOT NULL,
+    id_cited_contribution INT,
+    id_citing_article     INT,
 
     CONSTRAINT Citation_Contribution_cited_fk
         FOREIGN KEY (id_cited_contribution) REFERENCES Article (id) ON DELETE CASCADE,
@@ -266,15 +265,6 @@ FROM Contribution;
 SELECT *
 FROM Citation;
 
-
 -- TODO
--- SEQUENCE for primary keys generation
-
--- NOT NULL constraints - check existing, add further?
--- ON DELETE .___. - check existing, discuss
-
--- composite foreign key
 
 -- otestovat vkládání příspěvku, technické zprávy a samotného článku (bez specializace)
-
--- year + number je primary key, ale year by se dal vytáhnout z atributu 'date'
