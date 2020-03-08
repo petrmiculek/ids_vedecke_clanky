@@ -53,7 +53,7 @@ CREATE TABLE Person
     research_topic    VARCHAR(1023),
     research_keywords VARCHAR(255),
 
-    institution_id    INT NOT NULL,
+    institution_id    INT         NOT NULL,
 
     CONSTRAINT Institution_Person_fk
         FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
@@ -94,7 +94,7 @@ CREATE TABLE Magazine
 (
     id           INT DEFAULT Magazine_seq.NEXTVAL PRIMARY KEY,
     name         VARCHAR(63) NOT NULL, -- name and publisher_id MUST BE UNIQUE together
-    publisher_id INT NOT NULL,
+    publisher_id INT         NOT NULL,
 
     CONSTRAINT Magazine_Publisher_fk
         FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE,
@@ -104,9 +104,9 @@ CREATE TABLE Magazine
 
 CREATE TABLE ImpactFactorHistory
 (
-    magazine_id INT NOT NULL,
+    magazine_id INT    NOT NULL,
     value       NUMBER NOT NULL,
-    year        INT NOT NULL CHECK (year >= 1900),
+    year        INT    NOT NULL CHECK (year >= 1900),
     -- foreign key -> magazine
     CONSTRAINT ImpactFactorHistory_Magazine_fk
         FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
@@ -147,14 +147,15 @@ CREATE TABLE Contribution
     magazine_issue_year   INT NOT NULL,
     magazine_issue_number INT NOT NULL,
 
-    other_citations_count INT, -- how many times is this article cited by articles
+    other_citations_count INT,         -- how many times is this article cited by articles
     -- which are not present in this database
 
-    CONSTRAINT Contribution_Article_fk  -- generalization relationship
+    CONSTRAINT Contribution_Article_fk -- generalization relationship
         FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Contribution_MagazineIssue_fk
-        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (magazine_id, year, issue_number) ON DELETE CASCADE
+        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number)
+            REFERENCES MagazineIssue (magazine_id, year, issue_number) ON DELETE CASCADE
 );
 
 
@@ -239,7 +240,7 @@ VALUES (672, 1);
 
 -- invalid insert - institution does not exist
 --INSERT INTO Person
---    VALUES(DEFAULT, 'AAA', 'BBB', 'tiborkubik1@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
+--    VALUES(DEFAULT, 'AAA', 'BBB', 'albertEinstein@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
 
 
 SELECT *
