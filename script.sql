@@ -1,5 +1,8 @@
+DROP SEQUENCE Article_seq;
+DROP SEQUENCE Institution_seq;
+DROP SEQUENCE Magazine_seq;
 DROP SEQUENCE Person_seq;
-DROP SEQUENCE Author_order_seq;
+DROP SEQUENCE Publisher_seq;
 
 DROP TABLE Institution CASCADE CONSTRAINTS;                         -- instituce
 DROP TABLE Person CASCADE CONSTRAINTS;                              -- osoba
@@ -14,21 +17,34 @@ DROP TABLE Contribution CASCADE CONSTRAINTS;                        -- prispevek
 DROP TABLE Citation CASCADE CONSTRAINTS;                            -- citace (clanku)
 
 
+CREATE SEQUENCE Article_seq
+    START WITH 100000
+    INCREMENT BY 1;
+
+CREATE SEQUENCE Institution_seq
+    START WITH 100000
+    INCREMENT BY 1;
+
+CREATE SEQUENCE Magazine_seq
+    START WITH 100000
+    INCREMENT BY 1;
+
 CREATE SEQUENCE Person_seq
     START WITH 100000
     INCREMENT BY 1;
 
-CREATE SEQUENCE Author_order_seq
-    START WITH 1
+CREATE SEQUENCE Publisher_seq
+    START WITH 100000
     INCREMENT BY 1;
 
+
 CREATE TABLE Institution (
-    code INT NOT NULL PRIMARY KEY,
+    code INT DEFAULT Institution_seq.NEXTVAL PRIMARY KEY,
     name VARCHAR(63)
 );
 
 CREATE TABLE Person(
-    id INT DEFAULT Person_seq.NEXTVAL NOT NULL PRIMARY KEY,
+    id INT DEFAULT Person_seq.NEXTVAL PRIMARY KEY,
     name_first VARCHAR(31),
     name_last VARCHAR(31),
     email VARCHAR(63),
@@ -41,10 +57,8 @@ CREATE TABLE Person(
         FOREIGN KEY (institution_id) REFERENCES Institution (code) ON DELETE CASCADE
 );
 
-
-
 CREATE TABLE Article(
-    id INT NOT NULL PRIMARY KEY, -- document object identifier
+    id INT DEFAULT Article_seq.NEXTVAL PRIMARY KEY, -- document object identifier
     article_name VARCHAR(63)
     --- missing author???
 );
@@ -52,10 +66,8 @@ CREATE TABLE Article(
 CREATE TABLE ArticleShare(
     author_id INT NOT NULL,
     article_id INT NOT NULL,
-    author_order INT DEFAULT Author_order_seq.NEXTVAL, -- poradi autora, najit vhodnejsi oznaceni
-                                                       -- treba domysliet, order treba byt vzdy od 1 pre kazdy clanok zvlast
+    author_order INT NOT NULL,
     percentage NUMBER CHECK(percentage > 0 and percentage <= 100), -- non-zero
-    -- ma smysl na urovni SQL hlidat Suma(percentage) == 100?
 
     CONSTRAINT ArticleShare_Person_fk
         FOREIGN KEY (author_id) REFERENCES Person (id) ON DELETE CASCADE,
@@ -65,28 +77,25 @@ CREATE TABLE ArticleShare(
         FOREIGN KEY (article_id) REFERENCES Article (id) ON DELETE CASCADE
 );
 
-
 CREATE TABLE Publisher(
-    id INT NOT NULL PRIMARY KEY,
+    id INT DEFAULT Publisher_seq.NEXTVAL PRIMARY KEY,
     name_company VARCHAR(31) UNIQUE NOT NULL, -- vydavatel je identifikovan jmenem
     name_owner VARCHAR(63)
 
 );
 
 CREATE TABLE Magazine(
-    id INT NOT NULL PRIMARY KEY,
-    name VARCHAR(63), -- not unique on purpose
-    publisher_id INT NOT NULL UNIQUE,
+    id INT DEFAULT Magazine_seq.NEXTVAL PRIMARY KEY,
+    name VARCHAR(63),           -- name and publisher_id MUST BE UNIQUE together
+    publisher_id INT NOT NULL,
     CONSTRAINT Magazine_Publisher_fk
         FOREIGN KEY (publisher_id) REFERENCES Publisher (id) ON DELETE CASCADE
-
-    -- (Magazine is referenced by impact factor history)
 );
 
 CREATE TABLE ImpactFactorHistory(
+    magazine_id INT NOT NULL,
     value NUMBER,
     year INT CHECK(year >= 1900),
-    magazine_id NUMBER NOT NULL,
     -- foreign key -> magazine
     CONSTRAINT ImpactFactorHistory_Magazine_fk
         FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
@@ -94,7 +103,7 @@ CREATE TABLE ImpactFactorHistory(
 );
 
 CREATE TABLE TechnicalReport(
-    id INT NOT NULL PRIMARY KEY,
+    id INT PRIMARY KEY, -- primary key referencing
     institution_id INT NOT NULL,
 
     CONSTRAINT TechRep_Article_fk -- generalization relationship
@@ -105,25 +114,25 @@ CREATE TABLE TechnicalReport(
 );
 
 CREATE TABLE MagazineIssue(
-    id INT NOT NULL ,
     date_published DATE,
-    magazine_id INT NOT NULL,
-    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
-    issue_number INT CHECK (issue_number > 0), -- within a year
 
     impact_factor_value NUMBER, -- decimal value?
     -- also, does the attribute make sense together with table ImpactFactorHistory?
 
-    PRIMARY KEY (year, issue_number),
+    magazine_id INT NOT NULL,
+    year INT CHECK (year >= 1900), -- possible trigger, currently is a duplicate value
+    issue_number INT CHECK (issue_number > 0), -- within a year
+
+    PRIMARY KEY (magazine_id, year, issue_number),
 
     CONSTRAINT Issue_Magazine_fk
         FOREIGN KEY (magazine_id) REFERENCES Magazine (id) ON DELETE CASCADE
 );
 
 CREATE TABLE Contribution(
-    id INT NOT NULL PRIMARY KEY,
-    magazine_id INT NOT NULL,       -- added magazine id. When it was primary, it wasnt possible to
-                                    -- add more contributions referencing 1 magazine
+    id INT PRIMARY KEY,
+
+    magazine_id INT NOT NULL,
     magazine_issue_year INT NOT NULL,
     magazine_issue_number INT NOT NULL,
 
@@ -131,11 +140,11 @@ CREATE TABLE Contribution(
         FOREIGN KEY (magazine_id) REFERENCES Article (id) ON DELETE CASCADE,
 
     CONSTRAINT Contribution_MagazineIssue_fk
-        FOREIGN KEY (magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
+        FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
 );
 
 CREATE TABLE Citation(
-    id INT NOT NULL PRIMARY KEY, -- musi mit tabulka primarni klic?
+    id INT PRIMARY KEY, -- musi mit tabulka primarni klic?
     id_citing_contribution INT NOT NULL,
     id_cited_article INT NOT NULL,
 
@@ -183,9 +192,9 @@ INSERT INTO Magazine
     VALUES(556, 'Tech Mag', 301);
 
 INSERT INTO MagazineIssue
-    VALUES(1, '30-November-2019', 555, 2019, 1, 4.5);
+    VALUES('30-November-2019', 555, 2019, 1, 4.5);
 INSERT INTO MagazineIssue
-    VALUES(2, '11-December-2019', 555, 2019, 2, 1.3);
+    VALUES('11-December-2019', 555, 2019, 2, 1.3);
 
 -- INSERT ImpactFactorHistory
 
