@@ -156,10 +156,7 @@ CREATE TABLE Contribution
         FOREIGN KEY (magazine_id, magazine_issue_year, magazine_issue_number) REFERENCES MagazineIssue (year, issue_number) ON DELETE CASCADE
 );
 
-INSERT INTO Institution
-VALUES (105, 'Institution of Bioinformatics in Prague');
 
-----------------------------------------------------------------------------------------------
 CREATE TABLE Citation
 (
     id_cited_contribution INT NOT NULL,
@@ -173,6 +170,11 @@ CREATE TABLE Citation
 
     PRIMARY KEY (id_cited_contribution, id_citing_article) -- ensures unique combination of (Cited, Citing)
 );
+----------------------------------------------------------------------------------------------
+
+INSERT INTO Institution
+VALUES (105, 'Institution of Bioinformatics in Prague');
+
 INSERT INTO Institution
 VALUES (106, 'European Institute of Absurd Articles');
 
