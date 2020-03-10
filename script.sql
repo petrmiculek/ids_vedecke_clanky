@@ -63,7 +63,6 @@ CREATE TABLE Article
 (
     id           INT DEFAULT Article_seq.NEXTVAL PRIMARY KEY, -- document object identifier
     article_name VARCHAR(63) NOT NULL
-    --- missing author???
 );
 
 CREATE TABLE ArticleShare
@@ -175,104 +174,127 @@ CREATE TABLE Citation
 ----------------------------------------------------------------------------------------------
 
 INSERT INTO Institution
-VALUES (105, 'Institution of Bioinformatics in Prague');
+VALUES (DEFAULT, 'Institution of Bioinformatics in Prague');
 
 INSERT INTO Institution
 VALUES (106, 'European Institute of Absurd Articles');
+--      ^^^ explicit value
 
 INSERT INTO Person
-VALUES (DEFAULT, 'Emma', 'Clarkson', 'emma@gclarkson.com', 'Machine learning for computational haplotype analysis',
-        'AI, bioinformatics, genes, machine learning', 105);
+VALUES (DEFAULT, 'Emma', 'Clarkson', 'emma@gclarkson.com',
+        'Machine learning for computational haplotype analysis',
+        'AI, bioinformatics, genes, machine learning', 106);
+
 INSERT INTO Person
-VALUES (DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com', 'Measurement of absurdity of European articles',
+VALUES (DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com',
+        'Measurement of absurdity of European articles',
         'EU, articles, absurd articles', 106);
 
-INSERT INTO Article
-VALUES (567, 'Locus classification in chromosome');
-INSERT INTO Article
-VALUES (672, 'Blah-blah article');
-
-INSERT INTO ArticleShare
-VALUES (100000, 567, 1, 40);
-INSERT INTO ArticleShare
-VALUES (100001, 567, 2, 60);
-INSERT INTO ArticleShare
-VALUES (100001, 672, 3, 100);
-
-INSERT INTO TechnicalReport
-VALUES (567, 105);
-
-INSERT INTO Publisher
-VALUES (300, 'Best Publishers Ever (BPE)', 'Mark Fitch');
-INSERT INTO Publisher
-VALUES (301, 'Independent European Publishers', 'Emily Aldrin');
-
-INSERT INTO Magazine
-VALUES (555, 'First Magazine', 300);
-INSERT INTO Magazine
-VALUES (556, 'Tech Mag', 301);
-
-INSERT INTO Magazine
-VALUES (567, 'Tech Mag', 300);
-
-INSERT INTO MagazineIssue
-VALUES ('30-November-2019', 555, 2019, 1);
-INSERT INTO MagazineIssue
-VALUES ('11-December-2019', 555, 2019, 2);
-INSERT INTO MagazineIssue
-VALUES ('11-December-2019', 567, 2019, 1);
-
--- INSERT ImpactFactorHistory
-
-
-INSERT INTO Contribution
-VALUES (672, 555, 2019, 1, 12);
-INSERT INTO Contribution
-VALUES (672, 555, 2019, 2, 47);
-
-INSERT INTO Citation
-VALUES (567, 2);
-INSERT INTO Citation
-VALUES (672, 1);
-
--- invalid insert - non-unique Cited:Citing
--- INSERT INTO Citation VALUES(1, 672);
 
 -- invalid insert - institution does not exist
---INSERT INTO Person
---    VALUES(DEFAULT, 'AAA', 'BBB', 'albertEinstein@gmail.com', 'Machine learning for computational haplotype analysis', 'AI, bioinformatics, genes, machine learning', 104);
+INSERT INTO Person
+    VALUES(DEFAULT, 'AAA', 'BBB', 'aaaBBB@gmail.com',
+           'research-topic-456', 'AI, bioinformatics, genes, machine learning', 106);
+--                                                                              ^^^
+
+SELECT *
+    FROM Person;
+
+INSERT INTO Article
+    VALUES (567, 'Locus classification in chromosome');
+INSERT INTO Article
+    VALUES (672, 'Blah-blah article');
+
+INSERT INTO Article
+    VALUES (456, 'A VERY Random article');
+
+INSERT INTO ArticleShare
+    VALUES (100000, 567, 1, 40.7);
+
+INSERT INTO ArticleShare
+    VALUES (100001, 567, 2, NULL);
+
+INSERT INTO ArticleShare
+    VALUES (100000, 672, NULL, NULL);
+
+INSERT INTO TechnicalReport
+
+    VALUES (567, 106);
+
+INSERT INTO Publisher
+    VALUES (300, 'Best Publishers Ever (BPE)', 'Mark Fitch');
+
+INSERT INTO Publisher
+    VALUES (301, 'Independent European Publishers', 'Emily Aldrin');
+
+INSERT INTO Magazine
+    VALUES (555, 'First Magazine', 300);
+
+INSERT INTO Magazine
+    VALUES (556, 'Tech Mag', 301);
+
+INSERT INTO Magazine
+    VALUES (567, 'Tech Mag', 300);
+
+INSERT INTO MagazineIssue
+    VALUES ('30-November-2019', 555, 2019, 1);
+
+INSERT INTO MagazineIssue
+    VALUES ('11-December-2019', 555, 2019, 2);
+
+INSERT INTO MagazineIssue
+    VALUES ('11-December-2019', 567, 2019, 1);
+
+-- invalid insert - (CHECK year >= 1900)
+INSERT INTO MagazineIssue
+    VALUES ('11-January-1899', 567, 1899, 1);
+--                                  ^^^^
+
+INSERT INTO Contribution
+    VALUES (672, 555, 2019, 1, 12);
+
+INSERT INTO Contribution
+    VALUES (672, 555, 2019, 2, 47);
+
+INSERT INTO Citation
+    VALUES (567, 672);
+
+INSERT INTO Citation
+    VALUES (567, 456);
+
+
+
+-- invalid insert - non-unique Cited:Citing
+ INSERT INTO Citation
+    VALUES(672, 1);
 
 
 SELECT *
-FROM Institution;
+    FROM Institution;
 
 SELECT *
-FROM Person;
+    FROM Person;
 
 SELECT *
-FROM Article;
+    FROM Article;
 
 SELECT *
-FROM ArticleShare;
+    FROM ArticleShare;
 
 SELECT *
-FROM TechnicalReport;
+    FROM TechnicalReport;
 
 SELECT *
-FROM Publisher;
+    FROM Publisher;
 
 SELECT *
-FROM Magazine;
+    FROM Magazine;
 
 SELECT *
-FROM MagazineIssue;
+    FROM MagazineIssue;
 
 SELECT *
-FROM Contribution;
+    FROM Contribution;
 
 SELECT *
-FROM Citation;
-
--- TODO
-
--- otestovat vkládání příspěvku, technické zprávy a samotného článku (bez specializace)
+    FROM Citation;
