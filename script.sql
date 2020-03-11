@@ -192,13 +192,10 @@ VALUES (DEFAULT, 'Patrick', 'Chimney', 'pchimney@google.com',
 
 
 -- invalid insert - institution does not exist
-INSERT INTO Person
-    VALUES(DEFAULT, 'AAA', 'BBB', 'aaaBBB@gmail.com',
-           'research-topic-456', 'AI, bioinformatics, genes, machine learning', 106);
---                                                                              ^^^
-
-SELECT *
-    FROM Person;
+--INSERT INTO Person
+--    VALUES(DEFAULT, 'AAA', 'BBB', 'aaaBBB@gmail.com',
+--           'research-topic-456', 'AI, bioinformatics, genes, machine learning', 107);
+--                                                                                ^^^
 
 INSERT INTO Article
     VALUES (567, 'Locus classification in chromosome');
@@ -218,7 +215,6 @@ INSERT INTO ArticleShare
     VALUES (100000, 672, NULL, NULL);
 
 INSERT INTO TechnicalReport
-
     VALUES (567, 106);
 
 INSERT INTO Publisher
@@ -246,28 +242,18 @@ INSERT INTO MagazineIssue
     VALUES ('11-December-2019', 567, 2019, 1);
 
 -- invalid insert - (CHECK year >= 1900)
-INSERT INTO MagazineIssue
-    VALUES ('11-January-1899', 567, 1899, 1);
---                                  ^^^^
+-- INSERT INTO MagazineIssue VALUES ('11-January-1899', 567, 1899, 1);
+--                                                           ^^^^
 
+-- specialization of Article
 INSERT INTO Contribution
     VALUES (672, 555, 2019, 1, 12);
-
-INSERT INTO Contribution
-    VALUES (672, 555, 2019, 2, 47);
 
 INSERT INTO Citation
     VALUES (567, 672);
 
-INSERT INTO Citation
-    VALUES (567, 456);
-
-
-
 -- invalid insert - non-unique Cited:Citing
- INSERT INTO Citation
-    VALUES(672, 1);
-
+-- INSERT INTO Citation VALUES (567, 672);
 
 SELECT *
     FROM Institution;
